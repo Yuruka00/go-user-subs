@@ -7,17 +7,17 @@ import (
 )
 
 type Subscription struct {
-	ID          uuid.UUID
+	ID          uuid.UUID `gorm:"type:uuid;primaryKey"`
 	ServiceName string
 	UserID      uuid.UUID
-	price       int
-	dateStart   time.Time
-	dateEnd     time.Time
+	Price       int
+	DateStart   time.Time
+	DateEnd     *time.Time
 }
 
 type SubscriptionFilter struct {
-	ServiceName string
-	UserID      uuid.UUID
-	dateFrom    time.Time
-	dateTo      time.Time
+	ServiceName *string
+	UserID      *uuid.UUID
+	DateFrom    time.Time
+	DateTo      time.Time
 }

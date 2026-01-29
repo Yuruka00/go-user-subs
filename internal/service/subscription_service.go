@@ -13,7 +13,7 @@ type SubscriptionRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*domain.Subscription, error)
 	Update(ctx context.Context, s *domain.Subscription) error
 	Delete(ctx context.Context, id uuid.UUID) error
-	GetList(ctx context.Context, f *domain.SubscriptionFilter) ([]*domain.Subscription, error)
+	GetList(ctx context.Context, f *domain.SubscriptionFilter) ([]domain.Subscription, error)
 	SumByFilter(ctx context.Context, f *domain.SubscriptionFilter) (int, error)
 }
 
