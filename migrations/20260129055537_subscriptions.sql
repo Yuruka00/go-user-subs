@@ -7,7 +7,7 @@ CREATE TABLE subscriptions (
     service_name VARCHAR(255) NOT NULL,
     user_id UUID NOT NULL,
     price INTEGER CHECK (price >=0),
-    date_start DATE NOT_NULL,
+    date_start DATE NOT NULL,
     date_end DATE
 );
 
