@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 
 	"github.com/Yuruka00/go-user-subs/internal/domain"
 	"github.com/google/uuid"
@@ -13,20 +12,18 @@ import (
 
 type subscriptionRepository struct {
 	db *gorm.DB
-	lg *slog.Logger
 }
 
-func NewSubscriptionRepository(d *gorm.DB, l *slog.Logger) *subscriptionRepository {
+func NewSubscriptionRepository(d *gorm.DB) *subscriptionRepository {
 	return &subscriptionRepository{
 		db: d,
-		lg: l,
 	}
 }
 
 func (sr *subscriptionRepository) Create(ctx context.Context, s *domain.Subscription) error {
 	err := gorm.G[domain.Subscription](sr.db).Create(ctx, s)
 	if err != nil {
-		return fmt.Errorf("subscription repository - create failed: %w", err)
+		return fmt.Errorf("subscriptionRepository.Create: %w", err)
 	}
 	return nil
 }
@@ -35,36 +32,36 @@ func (sr *subscriptionRepository) GetByID(ctx context.Context, id uuid.UUID) (*d
 	s, err := sr.getByIDQuery(id).First(ctx)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("subscription repository - get failed: %w", domain.ErrNotFound)
+			return nil, fmt.Errorf("subscriptionRepository.GetByID: %w", domain.ErrNotFound)
 		}
-		return nil, fmt.Errorf("subscription repository - get failed: %w", err)
+		return nil, fmt.Errorf("subscriptionRepository.GetByID: %w", err)
 	}
 	return &s, nil
 }
 func (sr *subscriptionRepository) Update(ctx context.Context, s *domain.Subscription) error {
 	ra, err := sr.getByIDQuery(s.ID).Omit("id").Updates(ctx, *s)
 	if err != nil {
-		return fmt.Errorf("subscription repository - update failed: %w", err)
+		return fmt.Errorf("subscriptionRepository.Update: %w", err)
 	}
 	if ra == 0 {
-		return fmt.Errorf("subscription repository - update failed: %w", domain.ErrNotFound)
+		return fmt.Errorf("subscriptionRepository.Update: %w", domain.ErrNotFound)
 	}
 	return nil
 }
 func (sr *subscriptionRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	ra, err := sr.getByIDQuery(id).Delete(ctx)
 	if err != nil {
-		return fmt.Errorf("subscription repository - delete failed: %w", err)
+		return fmt.Errorf("subscriptionRepository.Delete: %w", err)
 	}
 	if ra == 0 {
-		return fmt.Errorf("subscription repository - delete failed: %w", domain.ErrNotFound)
+		return fmt.Errorf("subscriptionRepository.Delete: %w", domain.ErrNotFound)
 	}
 	return nil
 }
 func (sr *subscriptionRepository) GetList(ctx context.Context, f *domain.SubscriptionFilter) ([]domain.Subscription, error) {
 	rs, err := sr.getFilteredQuery(f).Find(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("subscription repository - getlist failed: %w", err)
+		return nil, fmt.Errorf("subscriptionRepository.GetList: %w", err)
 	}
 	return rs, nil
 }
@@ -73,7 +70,7 @@ func (sr *subscriptionRepository) SumByFilter(ctx context.Context, f *domain.Sub
 	var total int
 	err := sr.getFilteredQuery(f).Select("COALESCE(SUM(price), 0)").Scan(ctx, &total)
 	if err != nil {
-		return 0, fmt.Errorf("subscription repository - sum failed: %w", err)
+		return 0, fmt.Errorf("subscriptionRepository.SumByFilter: %w", err)
 	}
 	return total, nil
 }

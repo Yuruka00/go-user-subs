@@ -53,7 +53,7 @@ func main() {
 	}
 
 	// Dependency Injection
-	repo := postgres_repo.NewSubscriptionRepository(db, baseLogger.With("layer", "repository"))
+	repo := postgres_repo.NewSubscriptionRepository(db)
 	srv := service.NewSubscriptionService(repo, baseLogger.With("layer", "service"))
 	_ = handler.NewSubscriptionHandler(srv, baseLogger.With("layer", "handler"))
 
