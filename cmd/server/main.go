@@ -10,6 +10,7 @@ import (
 	"github.com/Yuruka00/go-user-subs/internal/service"
 	"github.com/Yuruka00/go-user-subs/internal/tools/config"
 	"github.com/Yuruka00/go-user-subs/migrations"
+	"github.com/go-chi/chi/v5"
 	"github.com/pressly/goose/v3"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -55,10 +56,19 @@ func main() {
 	// Dependency Injection
 	repo := postgres_repo.NewSubscriptionRepository(db)
 	srv := service.NewSubscriptionService(repo, baseLogger.With("layer", "service"))
-	_ = handler.NewSubscriptionHandler(srv, baseLogger.With("layer", "handler"))
+	h := handler.NewSubscriptionHandler(srv, baseLogger.With("layer", "handler"))
+
+	r := chi.NewRouter()
+
+	r.Post("/subscriptions", h.Create)
+	r.Get("/subscriptions/{id}", h.Get)
+	r.Patch("/subscriptions/{id}", h.Update)
+	r.Delete("/subscriptions/{id}", h.Delete)
+	r.Get("/subscriptions", h.GetList)
+	r.Get("/subscriptions/total", h.GetTotalPrice)
 
 	// Server starting
-	err = http.ListenAndServe(":"+cfg.AppPort, nil)
+	err = http.ListenAndServe(":"+cfg.AppPort, r)
 	if err != nil {
 		baseLogger.Error("failed to start server", "error", err)
 		os.Exit(1)
