@@ -41,9 +41,13 @@ func (ss *SubscriptionHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var request SubscriptionCreateRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		ss.lg.Debug("SubscriptionHandler.Create", "request decode error", err)
+
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	ss.lg.Debug("SubscriptionHandler.Create", "request data", request)
 
 	err := ss.vld.Struct(&request)
 	if err != nil {
@@ -54,11 +58,15 @@ func (ss *SubscriptionHandler) Create(w http.ResponseWriter, r *http.Request) {
 	item, err := request.ToDomain()
 
 	if err != nil {
+		ss.lg.Debug("SubscriptionHandler.Create", "request to domain error", err)
+
 		respondWithError(w, http.StatusBadRequest, "bad request")
 		return
 	}
 
 	if err = ss.svc.Create(r.Context(), item); err != nil {
+		ss.lg.Error("SubscriptionHandler.Create", "error", err)
+
 		respondWithError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
@@ -88,12 +96,15 @@ func (ss *SubscriptionHandler) Get(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusNotFound, "subscription not found")
 			return
 		}
+
+		ss.lg.Error("SubscriptionHandler.Get", "error", err)
+
 		respondWithError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusFound)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(res)
 }
 
@@ -113,9 +124,12 @@ func (ss *SubscriptionHandler) Update(w http.ResponseWriter, r *http.Request) {
 	var request SubscriptionUpdateRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		ss.lg.Debug("SubscriptionHandler.Update", "request decode error", err)
+
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	ss.lg.Debug("SubscriptionHandler.Update", "request data", request)
 
 	err = ss.vld.Struct(&request)
 	if err != nil {
@@ -125,6 +139,8 @@ func (ss *SubscriptionHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	item, hasChanges, err := request.ToDomain()
 	if err != nil {
+		ss.lg.Debug("SubscriptionHandler.Update", "request to domain error", err)
+
 		respondWithError(w, http.StatusBadRequest, "bad request")
 		return
 	}
@@ -140,6 +156,9 @@ func (ss *SubscriptionHandler) Update(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusNotFound, "subscription not found")
 			return
 		}
+
+		ss.lg.Error("SubscriptionHandler.Update", "error", err)
+
 		respondWithError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
@@ -166,6 +185,9 @@ func (ss *SubscriptionHandler) Delete(w http.ResponseWriter, r *http.Request) {
 			respondWithError(w, http.StatusNotFound, "subscription not found")
 			return
 		}
+
+		ss.lg.Error("SubscriptionHandler.Delete", "error", err)
+
 		respondWithError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
@@ -179,7 +201,7 @@ func (ss *SubscriptionHandler) GetList(w http.ResponseWriter, r *http.Request) {
 
 	userIDString := r.URL.Query().Get("user_id")
 	if userIDString != "" {
-		userID, err := uuid.Parse(r.URL.Query().Get("user_id"))
+		userID, err := uuid.Parse(userIDString)
 
 		if err != nil {
 			respondWithError(w, http.StatusBadRequest, "wrong user_id format")
@@ -191,14 +213,20 @@ func (ss *SubscriptionHandler) GetList(w http.ResponseWriter, r *http.Request) {
 	filterRequest.DateFrom = r.URL.Query().Get("date_from")
 	filterRequest.DateTo = r.URL.Query().Get("date_to")
 
+	ss.lg.Debug("SubscriptionHandler.GetList", "request data", filterRequest)
+
 	filter, err := filterRequest.ToDomain()
 	if err != nil {
+		ss.lg.Debug("SubscriptionHandler.GetList", "request to domain error", err)
+
 		respondWithError(w, http.StatusBadRequest, "bad request")
 		return
 	}
 
 	res, err := ss.svc.GetList(r.Context(), filter)
 	if err != nil {
+		ss.lg.Error("SubscriptionHandler.GetList", "error", err)
+
 		respondWithError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
@@ -214,7 +242,7 @@ func (ss *SubscriptionHandler) GetTotalPrice(w http.ResponseWriter, r *http.Requ
 
 	userIDString := r.URL.Query().Get("user_id")
 	if userIDString != "" {
-		userID, err := uuid.Parse(r.URL.Query().Get("user_id"))
+		userID, err := uuid.Parse(userIDString)
 
 		if err != nil {
 			respondWithError(w, http.StatusBadRequest, "wrong user_id format")
@@ -226,20 +254,26 @@ func (ss *SubscriptionHandler) GetTotalPrice(w http.ResponseWriter, r *http.Requ
 	filterRequest.DateFrom = r.URL.Query().Get("date_from")
 	filterRequest.DateTo = r.URL.Query().Get("date_to")
 
+	ss.lg.Debug("SubscriptionHandler.GetTotalPrice", "request data", filterRequest)
+
 	filter, err := filterRequest.ToDomain()
 	if err != nil {
+		ss.lg.Debug("SubscriptionHandler.GetTotalPrice", "request to domain error", err)
+
 		respondWithError(w, http.StatusBadRequest, "bad request")
 		return
 	}
 
 	res, err := ss.svc.CalculateTotalPrice(r.Context(), filter)
 	if err != nil {
+		ss.lg.Error("SubscriptionHandler.GetTotalPrice", "error", err)
+
 		respondWithError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusFound)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(struct {
 		Total int `json:"total"`
 	}{Total: res})

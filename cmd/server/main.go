@@ -18,8 +18,7 @@ import (
 
 func main() {
 	// Logger Initialization
-	loggerHandler := slog.NewJSONHandler(os.Stdout, nil)
-	baseLogger := slog.New(loggerHandler)
+	baseLogger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 	// Config Reading
 	cfg, err := config.Load()
@@ -27,6 +26,13 @@ func main() {
 		baseLogger.Error("failed to load config", "error", err)
 		os.Exit(1)
 	}
+
+	// Logging level setup
+	var logLevel slog.Level
+	if err := logLevel.UnmarshalText([]byte(cfg.LogLevel)); err != nil {
+		logLevel = slog.LevelInfo
+	}
+	baseLogger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: logLevel}))
 
 	// Database Conection Establishing
 	db, err := gorm.Open(postgres.Open(cfg.GetDSN()), &gorm.Config{})
@@ -58,6 +64,7 @@ func main() {
 	srv := service.NewSubscriptionService(repo, baseLogger.With("layer", "service"))
 	h := handler.NewSubscriptionHandler(srv, baseLogger.With("layer", "handler"))
 
+	// Routes Setup
 	r := chi.NewRouter()
 
 	r.Post("/subscriptions", h.Create)

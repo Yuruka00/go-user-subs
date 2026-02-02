@@ -13,6 +13,7 @@ type Config struct {
 	PgUser     string `env:"POSTGRES_USER,required"`
 	PgPassword string `env:"POSTGRES_PASSWORD,required"`
 	AppPort    string `env:"APP_PORT,required"`
+	LogLevel   string `env:"LOG_LEVEL"`
 }
 
 func Load() (*Config, error) {
