@@ -14,8 +14,16 @@ import (
 	"github.com/pressly/goose/v3"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	_ "github.com/Yuruka00/go-user-subs/docs"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
+// @title User Subscriptions API
+// @version 1.0
+// @description API сервис для управления подписками.
+// @host localhost:8080
+// @BasePath /
 func main() {
 	// Logger Initialization
 	baseLogger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -66,6 +74,8 @@ func main() {
 
 	// Routes Setup
 	r := chi.NewRouter()
+
+	r.Get("/swagger/*", httpSwagger.WrapHandler)
 
 	r.Post("/subscriptions", h.Create)
 	r.Get("/subscriptions/{id}", h.Get)

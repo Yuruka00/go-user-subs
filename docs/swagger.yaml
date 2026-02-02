@@ -1,0 +1,267 @@
+basePath: /
+definitions:
+  domain.Subscription:
+    properties:
+      dateEnd:
+        type: string
+      dateStart:
+        type: string
+      id:
+        type: string
+      price:
+        type: integer
+      serviceName:
+        type: string
+      userID:
+        type: string
+    type: object
+  handler.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  handler.SubscriptionCreateRequest:
+    properties:
+      date_end:
+        type: string
+      date_start:
+        type: string
+      price:
+        minimum: 0
+        type: integer
+      service_name:
+        type: string
+      user_id:
+        type: string
+    required:
+    - date_start
+    - service_name
+    - user_id
+    type: object
+  handler.SubscriptionUpdateRequest:
+    properties:
+      date_end:
+        type: string
+      date_start:
+        type: string
+      price:
+        minimum: 0
+        type: integer
+      service_name:
+        type: string
+      user_id:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: API сервис для управления подписками.
+  title: User Subscriptions API
+  version: "1.0"
+paths:
+  /subscriptions:
+    get:
+      description: Позволяет получить список подписок по фильтру
+      parameters:
+      - description: ID пользователя в формате UUID
+        in: query
+        name: user_id
+        type: string
+      - description: Название сервиса
+        in: query
+        name: service_name
+        type: string
+      - description: Дата начала (YYYY-MM)
+        in: query
+        name: date_from
+        type: string
+      - description: Дата конца (YYYY-MM)
+        in: query
+        name: date_to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.Subscription'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Получить список подписок по фильтру
+      tags:
+      - subscriptions
+    post:
+      consumes:
+      - application/json
+      description: Позволяет добавить новую подписку в базу данных для конкретного
+        пользователя
+      parameters:
+      - description: Данные новой подписки
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.SubscriptionCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.Subscription'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Создать подписку
+      tags:
+      - subscriptions
+  /subscriptions/{id}:
+    delete:
+      description: Позволяет удалить запись с подпиской из базы данных
+      parameters:
+      - description: ID подписки в формате UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Удалить подписку
+      tags:
+      - subscriptions
+    get:
+      description: Позволяет получить информацию о подписке по её ID
+      parameters:
+      - description: ID подписки в формате UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Subscription'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Получить подписку
+      tags:
+      - subscriptions
+    patch:
+      consumes:
+      - application/json
+      description: Позволяет выборочно обновить инфомрацию о подписке в базе данных
+      parameters:
+      - description: ID подписки в формате UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Тело запроса с полями для обновления
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/handler.SubscriptionUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Обновить информацию о подписке
+      tags:
+      - subscriptions
+  /subscriptions/total:
+    get:
+      description: Позволяет получить итоговую стоимость подписок по фильтру
+      parameters:
+      - description: ID пользователя в формате UUID
+        in: query
+        name: user_id
+        type: string
+      - description: Название сервиса
+        in: query
+        name: service_name
+        type: string
+      - description: Дата начала (YYYY-MM)
+        in: query
+        name: date_from
+        type: string
+      - description: Дата конца (YYYY-MM)
+        in: query
+        name: date_to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Пример: {"total": 1500}'
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Получить итоговую стоимость подписок
+      tags:
+      - subscriptions
+swagger: "2.0"
